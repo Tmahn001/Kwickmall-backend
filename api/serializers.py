@@ -29,6 +29,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class ChatSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
+    is_open = serializers.BooleanField(read_only=True)
 
 
     class Meta:
