@@ -30,9 +30,15 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
 
+
     class Meta:
         model = Chat
         fields = '__all__'
+    
+    def create(self, validated_data):
+        validated_data['is_open'] = True  # Add this line to set is_open to True
+        chat = Chat.objects.create(**validated_data)
+        return chat
 
 
 
