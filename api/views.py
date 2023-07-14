@@ -41,13 +41,37 @@ class AdminOpenChatListView(generics.ListAPIView):
         return Chat.objects.filter(is_open=True)
 
 # View to retrieve all messages of a seller in a particular chat
+'''class SellerChatMessageListView(generics.ListAPIView):
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        seller_id = self.kwargs['seller_id']
+        chat_id = self.kwargs['chat_id']
+        return Message.objects.filter(chat_id=chat_id, sender_id=seller_id)'''
 class SellerChatMessageListView(generics.ListAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
         seller_id = self.kwargs['seller_id']
         chat_id = self.kwargs['chat_id']
-        return Message.objects.filter(chat_id=chat_id, sender_id=seller_id)
+        return Message.objects.filter(chat_id=chat_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        seller_id = self.kwargs['seller_id']
+        chat_id = self.kwargs['chat_id']
+        
+        seller_messages = queryset.filter(sender_id=seller_id)
+        buyer_messages = queryset.exclude(sender_id=seller_id).exclude(sender_id=1)  # Exclude seller and admin messages
+        admin_messages = queryset.filter(sender_id=1)
+
+        data = {
+            'seller_messages': self.get_serializer(seller_messages, many=True).data,
+            'buyer_messages': self.get_serializer(buyer_messages, many=True).data,
+            'admin_messages': self.get_serializer(admin_messages, many=True).data,
+        }
+
+        return Response(data)
 
 # View to retrieve all messages of a buyer in a particular chat
 class BuyerChatMessageListView(generics.ListAPIView):
@@ -56,7 +80,24 @@ class BuyerChatMessageListView(generics.ListAPIView):
     def get_queryset(self):
         buyer_id = self.kwargs['buyer_id']
         chat_id = self.kwargs['chat_id']
-        return Message.objects.filter(chat_id=chat_id, sender_id=buyer_id)
+        return Message.objects.filter(chat_id=chat_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        buyer_id = self.kwargs['buyer_id']
+        chat_id = self.kwargs['chat_id']
+        
+        buyer_messages = queryset.filter(sender_id=buyer_id)
+        seller_messages = queryset.exclude(sender_id=buyer_id).exclude(sender_id=1)  # Exclude buyer and admin messages
+        admin_messages = queryset.filter(sender_id=1)
+
+        data = {
+            'buyer_messages': self.get_serializer(buyer_messages, many=True).data,
+            'seller_messages': self.get_serializer(seller_messages, many=True).data,
+            'admin_messages': self.get_serializer(admin_messages, many=True).data,
+        }
+
+        return Response(data)
 
 # View to retrieve all messages in a particular chat for admin
 class AdminChatMessageListView(generics.ListAPIView):
@@ -64,7 +105,23 @@ class AdminChatMessageListView(generics.ListAPIView):
 
     def get_queryset(self):
         chat_id = self.kwargs['chat_id']
-        return Message.objects.filter(chat_id=chat_id, sender_id=1)
+        return Message.objects.filter(chat_id=chat_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        chat_id = self.kwargs['chat_id']
+        
+        admin_messages = queryset.filter(sender_id=1)
+        buyer_messages = queryset.exclude(sender_id=1).exclude(sender_id=chat.seller_id)  # Exclude admin and seller messages
+        seller_messages = queryset.exclude(sender_id=1).exclude(sender_id=chat.buyer_id)  # Exclude admin and buyer messages
+
+        data = {
+            'admin_messages': self.get_serializer(admin_messages, many=True).data,
+            'buyer_messages': self.get_serializer(buyer_messages, many=True).data,
+            'seller_messages': self.get_serializer(seller_messages, many=True).data,
+        }
+
+        return Response(data)
 
 class CloseChatView(APIView):
     def put(self, request, chat_id):
