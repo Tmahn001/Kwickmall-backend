@@ -5,6 +5,7 @@ import uuid
 from django.db import models
 
 class Chat(models.Model):
+    issue = models.CharField(max_length=255, null=True, blank=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     buyer_id = models.CharField(max_length=255)
     seller_id = models.CharField(max_length=255)
