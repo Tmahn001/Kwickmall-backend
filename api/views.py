@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import ChatSerializer, MessageSerializer
+from django.shortcuts import get_object_or_404
+
 
 
 class ChatViewSet(viewsets.ModelViewSet):
@@ -122,6 +124,39 @@ class AdminChatMessageListView(generics.ListAPIView):
         }
 
         return Response(data)
+
+# View to retrieve all messages in a particular chat
+class ChatMessageListView(generics.ListAPIView):
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        chat_id = self.kwargs['chat_id']
+        return Message.objects.filter(chat_id=chat_id).order_by('created_at')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        chat_id = self.kwargs['chat_id']
+        chat = get_object_or_404(Chat, id=chat_id)
+
+        messages = []
+        for message in queryset:
+            if message.sender_id == chat.seller_id:
+                role = 'seller'
+            elif message.sender_id == chat.buyer_id:
+                role = 'buyer'
+            else:
+                role = 'admin'
+            
+            messages.append({
+                'id': message.id,
+                'role': role,
+                'content': message.content,
+                'attachment': message.attachment.url if message.attachment else None,
+                'created_at': message.created_at,
+            })
+
+        return Response(messages)
+
 
 class CloseChatView(APIView):
     def put(self, request, chat_id):
