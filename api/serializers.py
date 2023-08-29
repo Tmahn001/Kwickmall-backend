@@ -21,7 +21,7 @@ class MessageSerializer(serializers.ModelSerializer):
         
         if sender_id != chat_buyer_id and sender_id != chat_seller_id:
             if sender_id != 1:
-                raise serializers.ValidationError("You are not allowed to send messages in this chat.")
+                raise serializers.ValidationError("Sorry, You are not allowed to send messages in this chat.")
         
         message = Message.objects.create(**validated_data)
         return message
