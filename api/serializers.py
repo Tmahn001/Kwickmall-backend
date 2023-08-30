@@ -13,17 +13,21 @@ class MessageSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         chat = validated_data['chat']
         sender_id = validated_data['sender_id']
+        chat_id = chat.id
+        print(sender_id)
         if not chat.is_open:
             raise serializers.ValidationError("This chat is closed. You cannot send messages.")
 
         chat_buyer_id = chat.buyer_id
         chat_seller_id = chat.seller_id
+        allowed_ids= [chat_buyer_id, chat_seller_id, "1"]
         
-        if sender_id != chat_buyer_id and sender_id != chat_seller_id:
-            if sender_id != 1:
-                raise serializers.ValidationError("Sorry, You are not allowed to send messages in this chat.")
-        
+        if sender_id not in allowed_ids:
+            raise serializers.ValidationError("Sorry, You are not allowed to send messages in this chat.")
         message = Message.objects.create(**validated_data)
+        # Broadcast the new message to the chat room
+       
+        
         return message
 
 

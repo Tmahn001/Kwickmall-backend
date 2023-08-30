@@ -23,6 +23,8 @@ from rest_framework import routers
 from api.views import ChatViewSet, MessageViewSet, ChatMessageListView, CloseChatView, SellerChatMessageListView, SellerOpenChatListView, AdminChatMessageListView, AdminOpenChatListView, BuyerChatMessageListView, BuyerOpenChatListView
 from django.conf import settings
 from django.conf.urls.static import static
+from api import consumers
+from . import routing
 
 router = routers.DefaultRouter()
 router.register(r'chats', ChatViewSet, basename='chat')
@@ -31,6 +33,8 @@ router.register(r'messages', MessageViewSet, basename='message')
 urlpatterns = [
     path('admin/', admin.site.urls),
     *router.urls,
+    path('ws/chat/<uuid:chat_id>/', consumers.ChatConsumer.as_asgi()),
+    path('ws/', include(routing.websocket_urlpatterns)),
     path('chats/<uuid:chat_id>/close/', CloseChatView.as_view(), name='close-chat'),
     path('api/seller/<str:seller_id>/chats/', SellerOpenChatListView.as_view(), name='seller-open-chats'),
     path('api/buyer/<str:buyer_id>/chats/', BuyerOpenChatListView.as_view(), name='buyer-open-chats'),
