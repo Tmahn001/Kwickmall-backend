@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import ChatSerializer, MessageSerializer
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 
 
@@ -167,3 +168,8 @@ class CloseChatView(APIView):
 
         chat.close_chat()
         return Response({'message': 'Chat closed successfully'})
+
+class OpenChatCount(generics.ListAPIView):
+    def get(self, request):
+        open_unresolved_chat_count = Chat.objects.filter(is_open=True).count()
+        return JsonResponse({'count': open_unresolved_chat_count})
